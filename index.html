@@ -20,6 +20,7 @@
       --green: #34d399;
       --yellow: #fbbf24;
       --red: #f87171;
+      --purple: #a78bfa;
       --font: 'Inter', system-ui, sans-serif;
       --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
     }
@@ -41,22 +42,9 @@
       padding: 20px 32px;
     }
 
-    header h1 {
-      font-size: 20px;
-      font-weight: 600;
-      letter-spacing: -0.3px;
-      color: var(--text);
-    }
-
-    header h1 span {
-      color: var(--accent);
-    }
-
-    header p {
-      color: var(--text-muted);
-      font-size: 13px;
-      margin-top: 4px;
-    }
+    header h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+    header h1 span { color: var(--accent); }
+    header p { color: var(--text-muted); font-size: 13px; margin-top: 4px; }
 
     .tab-bar {
       display: flex;
@@ -80,29 +68,13 @@
       transition: color 0.15s, border-color 0.15s;
       white-space: nowrap;
     }
-
     .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { border-bottom-color: var(--accent); color: var(--accent); }
 
-    .tab-btn.active {
-      border-bottom-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .tab-content {
-      display: none;
-      padding: 32px;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-
+    .tab-content { display: none; padding: 32px; max-width: 1100px; margin: 0 auto; }
     .tab-content.active { display: block; }
 
-    h2 {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 6px;
-      letter-spacing: -0.2px;
-    }
+    h2 { font-size: 18px; font-weight: 600; margin-bottom: 6px; letter-spacing: -0.2px; }
 
     .section-desc {
       color: var(--text-muted);
@@ -123,19 +95,19 @@
 
     /* Controls */
     .controls {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
       background: var(--bg2);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
       margin-bottom: 24px;
+      padding: 20px;
     }
 
     .control-row {
-      display: flex;
       align-items: center;
+      display: flex;
       gap: 12px;
     }
 
@@ -143,152 +115,199 @@
       color: var(--text-muted);
       font-size: 12px;
       font-weight: 500;
-      min-width: 120px;
-      text-transform: uppercase;
       letter-spacing: 0.5px;
+      min-width: 130px;
+      text-transform: uppercase;
     }
 
-    .control-row input[type="range"] {
-      flex: 1;
-      accent-color: var(--accent);
-      cursor: pointer;
-    }
-
-    .control-row .val {
-      color: var(--text);
-      font-family: var(--mono);
-      font-size: 12px;
-      min-width: 60px;
-      text-align: right;
-    }
+    .control-row input[type="range"] { accent-color: var(--accent); cursor: pointer; flex: 1; }
+    .control-row .val { color: var(--text); font-family: var(--mono); font-size: 12px; min-width: 60px; text-align: right; }
 
     textarea {
       background: var(--bg3);
       border: 1px solid var(--border);
       border-radius: 8px;
       color: var(--text);
+      flex: 1;
       font-family: var(--font);
       font-size: 14px;
       line-height: 1.6;
+      outline: none;
       padding: 12px 14px;
       resize: vertical;
-      width: 100%;
-      outline: none;
       transition: border-color 0.15s;
+      width: 100%;
     }
-
     textarea:focus { border-color: var(--accent); }
 
-    /* Comparison panels */
-    .compare-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
+    select {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      outline: none;
+      padding: 6px 10px;
+      cursor: pointer;
     }
 
-    .panel {
-      background: var(--bg2);
+    /* Buttons */
+    .btn {
+      background: var(--bg3);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      overflow: hidden;
+      border-radius: 6px;
+      color: var(--text);
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 7px 14px;
+      transition: background 0.15s, border-color 0.15s;
     }
+    .btn:hover { background: var(--border); }
+    .btn.accent { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn.accent:hover { background: var(--accent-hover); }
+    .btn.danger { border-color: var(--red); color: var(--red); }
+    .btn.danger:hover { background: rgba(248,113,113,0.1); }
+
+    .btn.flash {
+      animation: flash 0.4s ease;
+    }
+    @keyframes flash {
+      0%   { background: var(--green); border-color: var(--green); color: #fff; }
+      100% { background: var(--bg3); border-color: var(--border); color: var(--text); }
+    }
+
+    /* Compare panels */
+    .compare-grid { display: grid; gap: 20px; grid-template-columns: 1fr 1fr; }
+
+    .panel { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
 
     .panel-header {
+      align-items: center;
       background: var(--bg3);
       border-bottom: 1px solid var(--border);
+      color: var(--text-muted);
       display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 16px;
       font-size: 12px;
       font-weight: 600;
+      gap: 8px;
       letter-spacing: 0.4px;
+      padding: 10px 16px;
       text-transform: uppercase;
-      color: var(--text-muted);
     }
 
-    .panel-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--accent);
-      flex-shrink: 0;
-    }
-
+    .panel-dot { background: var(--accent); border-radius: 50%; flex-shrink: 0; height: 8px; width: 8px; }
     .panel-dot.green { background: var(--green); }
-    .panel-dot.yellow { background: var(--yellow); }
+    .panel-dot.purple { background: var(--purple); }
 
     .panel-body { padding: 16px; }
 
-    .metric-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-
+    .metric-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
     .metric {
-      display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 8px 12px;
       background: var(--bg3);
       border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 12px;
     }
-
-    .metric-key {
-      color: var(--text-muted);
-      font-size: 12px;
-    }
-
-    .metric-val {
-      color: var(--text);
-      font-family: var(--mono);
-      font-size: 13px;
-      font-weight: 500;
-    }
-
+    .metric-key { color: var(--text-muted); font-size: 12px; }
+    .metric-val { color: var(--text); font-family: var(--mono); font-size: 13px; font-weight: 500; }
     .metric-val.good { color: var(--green); }
     .metric-val.warn { color: var(--yellow); }
+    .metric-val.bad  { color: var(--red); }
 
     .render-box {
+      background: var(--bg);
       border: 1px dashed var(--border);
       border-radius: 6px;
-      padding: 12px;
-      background: var(--bg);
-      word-break: break-word;
       overflow-wrap: break-word;
+      padding: 12px;
+      word-break: break-word;
     }
 
-    /* Resize tab */
-    .resizable-wrapper {
-      position: relative;
-      display: inline-block;
-      width: 100%;
+    /* Code snippet */
+    .snippet-wrap {
+      margin-top: 20px;
     }
+
+    .snippet-toggle {
+      align-items: center;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      font-family: var(--font);
+      font-size: 12px;
+      gap: 6px;
+      margin-bottom: 8px;
+      padding: 0;
+    }
+    .snippet-toggle:hover { color: var(--text); }
+    .snippet-toggle .arrow { transition: transform 0.2s; }
+    .snippet-toggle.open .arrow { transform: rotate(90deg); }
+
+    pre.snippet {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: #a9c5f5;
+      display: none;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.7;
+      overflow-x: auto;
+      padding: 16px;
+    }
+    pre.snippet.open { display: block; }
+    pre.snippet .kw  { color: #c792ea; }
+    pre.snippet .fn  { color: #82aaff; }
+    pre.snippet .str { color: #c3e88d; }
+    pre.snippet .num { color: #f78c6c; }
+    pre.snippet .cm  { color: #546e7a; font-style: italic; }
+
+    /* Resize tab */
+    .resizable-wrapper { display: inline-block; position: relative; width: 100%; }
 
     #resize-box {
       background: var(--bg3);
       border: 1px solid var(--border);
       border-radius: 8px;
-      width: 500px;
       height: 200px;
-      min-width: 200px;
-      min-height: 80px;
       max-width: 100%;
+      min-height: 80px;
+      min-width: 200px;
       overflow: hidden;
       padding: 16px;
       resize: both;
-      word-break: break-word;
-      overflow-wrap: break-word;
+      width: 500px;
+    }
+
+    #resize-text {
       font-family: var(--font);
       font-size: 15px;
       line-height: 1.6;
+      overflow-wrap: break-word;
+      word-break: break-word;
+    }
+
+    /* hidden element for fair DOM measurement */
+    #resize-measure-el {
+      font: 15px/1.6 Inter, system-ui, sans-serif;
+      left: -9999px;
+      overflow-wrap: break-word;
+      position: fixed;
+      top: 0;
+      visibility: hidden;
+      word-break: break-word;
     }
 
     #timing-overlay {
-      background: rgba(15, 17, 23, 0.92);
       backdrop-filter: blur(8px);
+      background: rgba(15,17,23,0.92);
       border: 1px solid var(--border);
       border-radius: 8px;
       bottom: 12px;
@@ -298,88 +317,48 @@
       position: absolute;
       right: 12px;
     }
-
-    #timing-overlay .t-row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 4px;
-    }
-
+    #timing-overlay .t-row { align-items: center; display: flex; gap: 8px; margin-bottom: 4px; }
     #timing-overlay .t-row:last-child { margin-bottom: 0; }
-
-    .t-label { color: var(--text-muted); min-width: 80px; }
+    .t-label { color: var(--text-muted); min-width: 90px; }
 
     /* Virtual list */
     #vlist-container {
-      position: relative;
-      height: 520px;
-      overflow-y: auto;
       background: var(--bg2);
       border: 1px solid var(--border);
       border-radius: 10px;
+      height: 520px;
+      overflow-y: auto;
+      position: relative;
     }
-
-    #vlist-spacer {
-      width: 100%;
-    }
-
-    #vlist-viewport {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-    }
-
-    .vlist-item {
-      border-bottom: 1px solid var(--border);
-      padding: 12px 20px;
-      font-size: 14px;
-      line-height: 1.6;
-      word-break: break-word;
-    }
-
-    .vlist-item .item-idx {
-      color: var(--text-muted);
-      font-family: var(--mono);
-      font-size: 11px;
-      margin-bottom: 4px;
-    }
+    #vlist-spacer { width: 100%; }
+    #vlist-viewport { left: 0; position: absolute; top: 0; width: 100%; }
+    .vlist-item { border-bottom: 1px solid var(--border); font-size: 14px; line-height: 1.6; padding: 12px 20px; word-break: break-word; }
+    .vlist-item .item-idx { color: var(--text-muted); font-family: var(--mono); font-size: 11px; margin-bottom: 4px; }
 
     #fps-badge {
+      align-items: center;
       background: var(--bg3);
       border: 1px solid var(--border);
       border-radius: 6px;
       display: inline-flex;
-      align-items: center;
-      gap: 6px;
       font-family: var(--mono);
       font-size: 12px;
+      gap: 6px;
       margin-bottom: 12px;
       padding: 6px 12px;
     }
-
     #fps-val { color: var(--green); font-weight: 600; }
 
-    /* Language table */
-    .lang-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
+    /* Language grid */
+    .lang-grid { display: flex; flex-direction: column; gap: 16px; }
 
-    .lang-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      overflow: hidden;
-    }
+    .lang-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
 
     .lang-card-header {
+      align-items: center;
       background: var(--bg3);
       border-bottom: 1px solid var(--border);
       display: flex;
-      align-items: center;
       gap: 10px;
       padding: 10px 16px;
     }
@@ -395,49 +374,20 @@
       text-transform: uppercase;
     }
 
-    .lang-card-body {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 0;
-    }
+    .lang-card-body { display: grid; grid-template-columns: 1fr 1fr 1fr; }
 
-    .lang-cell {
-      padding: 14px 16px;
-      border-right: 1px solid var(--border);
-    }
-
+    .lang-cell { border-right: 1px solid var(--border); padding: 14px 16px; }
     .lang-cell:last-child { border-right: none; }
+    .lang-cell-label { color: var(--text-muted); font-size: 11px; letter-spacing: 0.5px; margin-bottom: 8px; text-transform: uppercase; }
 
-    .lang-cell-label {
-      color: var(--text-muted);
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
-    }
+    .lang-text-preview { direction: auto; font-size: 15px; line-height: 1.6; overflow-wrap: break-word; word-break: break-word; }
 
-    .lang-text-preview {
-      font-size: 15px;
-      line-height: 1.6;
-      word-break: break-word;
-      direction: auto;
-    }
-
-    .lang-metrics {
-      font-family: var(--mono);
-      font-size: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
+    .lang-metrics { display: flex; flex-direction: column; font-family: var(--mono); font-size: 12px; gap: 4px; }
     .lang-metrics span { color: var(--text-muted); }
     .lang-metrics strong { color: var(--green); }
 
-    /* Line rendering tab */
-    .line-wrap {
-      font-size: 0;
-    }
+    /* Line rendering */
+    .line-wrap { font-size: 0; }
 
     .rendered-line {
       border-radius: 3px;
@@ -446,22 +396,14 @@
       font-size: 14px;
       line-height: 1;
       margin-bottom: 2px;
+      overflow-wrap: normal;
       padding: 4px 8px;
       white-space: pre;
       word-break: normal;
-      overflow-wrap: normal;
     }
-
-    .rendered-line:nth-child(odd)  { background: rgba(79, 142, 247, 0.08); }
-    .rendered-line:nth-child(even) { background: rgba(52, 211, 153, 0.06); }
-
-    .line-meta {
-      color: var(--text-muted);
-      font-family: var(--mono);
-      font-size: 11px;
-      margin-right: 10px;
-      user-select: none;
-    }
+    .rendered-line:nth-child(odd)  { background: rgba(79,142,247,0.08); }
+    .rendered-line:nth-child(even) { background: rgba(52,211,153,0.06); }
+    .line-meta { color: var(--text-muted); font-family: var(--mono); font-size: 11px; margin-right: 10px; user-select: none; }
 
     #line-output-wrapper {
       background: var(--bg2);
@@ -472,8 +414,53 @@
       padding: 16px;
     }
 
+    /* Benchmark tab */
+    .bench-grid { display: grid; gap: 12px; grid-template-columns: repeat(3, 1fr); margin-bottom: 24px; }
+    .bench-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+    }
+    .bench-card .bench-val { color: var(--accent); font-family: var(--mono); font-size: 28px; font-weight: 600; margin: 8px 0 4px; }
+    .bench-card .bench-label { color: var(--text-muted); font-size: 12px; }
+    .bench-card .bench-sub { color: var(--text-muted); font-family: var(--mono); font-size: 11px; margin-top: 2px; }
+    .bench-card.highlight .bench-val { color: var(--green); }
+
+    #bench-bar-wrap {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    #bench-bar-wrap h3 { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; }
+
+    .bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .bar-label { color: var(--text-muted); font-size: 12px; min-width: 120px; }
+    .bar-track { flex: 1; background: var(--bg3); border-radius: 4px; height: 10px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+    .bar-val { color: var(--text); font-family: var(--mono); font-size: 12px; min-width: 80px; text-align: right; }
+
+    #bench-log {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.8;
+      max-height: 220px;
+      overflow-y: auto;
+      padding: 16px;
+      color: var(--text-muted);
+    }
+
+    /* Inline flex helpers */
+    .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
     /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar { height: 6px; width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   </style>
@@ -490,15 +477,16 @@
     <button class="tab-btn" data-tab="vlist">Virtual List</button>
     <button class="tab-btn" data-tab="multilang">Multi-language</button>
     <button class="tab-btn" data-tab="linewise">Line Rendering</button>
+    <button class="tab-btn" data-tab="benchmark">Benchmark</button>
   </nav>
 
-  <!-- Tab 1: Live Playground -->
+  <!-- ── Tab 1: Live Playground ──────────────────────────────────────────── -->
   <section class="tab-content active" id="tab-playground">
     <h2>Live Measurement Playground</h2>
     <p class="section-desc">
-      Type any text, adjust font size, container width, and line height. Pretext predicts height and line count
-      using <span class="code-pill">prepare()</span> + <span class="code-pill">layout()</span> — no DOM reads.
-      Compare the prediction against the actual DOM rendering.
+      Type any text, adjust font size, container width, and line height.
+      Pretext predicts height and line count using <span class="code-pill">prepare()</span> +
+      <span class="code-pill">layout()</span> — no DOM reads. Compare the prediction against actual DOM rendering.
     </p>
 
     <div class="controls">
@@ -519,7 +507,16 @@
       <div class="control-row">
         <label>Line height</label>
         <input type="range" id="pg-lh" min="10" max="30" value="16" step="1" />
-        <span class="val" id="pg-lh-val">1.0</span>
+        <span class="val" id="pg-lh-val">1.6</span>
+      </div>
+      <div class="control-row">
+        <label>White-space</label>
+        <label style="min-width:auto;text-transform:none;letter-spacing:0;color:var(--text);display:flex;gap:6px;align-items:center;cursor:pointer;">
+          <input type="checkbox" id="pg-prewrap" style="accent-color:var(--accent);cursor:pointer;" />
+          <span style="font-size:13px;">pre-wrap mode</span>
+        </label>
+        <button class="btn danger" id="pg-clear-cache" style="margin-left:auto;">Clear Cache</button>
+        <span id="pg-cache-status" style="font-family:var(--mono);font-size:11px;color:var(--text-muted);"></span>
       </div>
     </div>
 
@@ -530,12 +527,14 @@
           <div class="metric-list">
             <div class="metric"><span class="metric-key">Height</span><span class="metric-val" id="pg-pred-height">—</span></div>
             <div class="metric"><span class="metric-key">Line count</span><span class="metric-val" id="pg-pred-lines">—</span></div>
-            <div class="metric"><span class="metric-key">prepare() time</span><span class="metric-val" id="pg-pred-prep">—</span></div>
+            <div class="metric"><span class="metric-key">prepare() total</span><span class="metric-val" id="pg-pred-prep">—</span></div>
+            <div class="metric"><span class="metric-key">→ analysis phase</span><span class="metric-val" id="pg-prof-analysis">—</span></div>
+            <div class="metric"><span class="metric-key">→ measure phase</span><span class="metric-val" id="pg-prof-measure">—</span></div>
             <div class="metric"><span class="metric-key">layout() time</span><span class="metric-val" id="pg-pred-layout">—</span></div>
           </div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">Measured height shown as overlay:</div>
-          <div style="position:relative;display:inline-block;width:100%">
-            <div id="pg-pred-viz" style="background:rgba(79,142,247,0.05);border:1px solid rgba(79,142,247,0.3);border-radius:6px;"></div>
+          <div class="metric-list" style="margin-bottom:0">
+            <div class="metric"><span class="metric-key">Segments analyzed</span><span class="metric-val" id="pg-prof-segs">—</span></div>
+            <div class="metric"><span class="metric-key">Breakable segments</span><span class="metric-val" id="pg-prof-break">—</span></div>
           </div>
         </div>
       </div>
@@ -548,63 +547,87 @@
             <div class="metric"><span class="metric-key">Δ vs Pretext</span><span class="metric-val" id="pg-delta">—</span></div>
             <div class="metric"><span class="metric-key">getBCR time</span><span class="metric-val" id="pg-dom-time">—</span></div>
           </div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">Actual rendered text:</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">Predicted height (blue block):</div>
+          <div style="position:relative;">
+            <div id="pg-pred-viz" style="background:rgba(79,142,247,0.07);border:1px solid rgba(79,142,247,0.3);border-radius:6px;transition:height 0.15s,width 0.15s;"></div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin:12px 0 6px">Actual rendered text:</div>
           <div class="render-box">
-            <div id="pg-dom-render" style="word-break:break-word;overflow-wrap:break-word;"></div>
+            <div id="pg-dom-render" style="overflow-wrap:break-word;word-break:break-word;"></div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Live code snippet -->
+    <div class="snippet-wrap">
+      <button class="snippet-toggle" id="pg-snippet-toggle">
+        <span class="arrow">▶</span> Show API call
+      </button>
+      <pre class="snippet" id="pg-snippet"></pre>
+    </div>
   </section>
 
-  <!-- Tab 2: Resize Timing -->
+  <!-- ── Tab 2: Resize Timing ─────────────────────────────────────────────── -->
   <section class="tab-content" id="tab-resize">
     <h2>Resize Comparison</h2>
     <p class="section-desc">
       Drag the corner of the box to resize it. On each resize event, two timings are measured:
-      <span class="code-pill">layout()</span> (Pretext — no DOM read) vs
-      <span class="code-pill">getBoundingClientRect()</span> (traditional DOM approach).
+      <span class="code-pill">layout()</span> (Pretext — pure arithmetic, no DOM) vs a hidden off-screen
+      element's <span class="code-pill">getBoundingClientRect()</span> at the same width — both measuring
+      the same text at the same width for a fair comparison.
     </p>
 
     <div class="resizable-wrapper">
       <div id="resize-box">
-        Typography is the art and technique of arranging type to make written language legible, readable, and appealing when displayed. The arrangement of type involves selecting typefaces, point sizes, line lengths, line-spacing (leading), and letter-spacing (tracking).
+        <div id="resize-text">Typography is the art and technique of arranging type to make written language legible, readable, and appealing when displayed. The arrangement of type involves selecting typefaces, point sizes, line lengths, line-spacing (leading), and letter-spacing (tracking).</div>
       </div>
+      <!-- Off-screen element for fair DOM measurement -->
+      <div id="resize-measure-el"></div>
       <div id="timing-overlay">
-        <div class="t-row"><span class="t-label">Pretext:</span><span id="t-pretext" style="color:var(--accent)">—</span></div>
-        <div class="t-row"><span class="t-label">getBCR:</span><span id="t-dom" style="color:var(--green)">—</span></div>
-        <div class="t-row" style="margin-top:4px;padding-top:4px;border-top:1px solid var(--border)">
+        <div class="t-row"><span class="t-label">Pretext layout():</span><span id="t-pretext" style="color:var(--accent)">—</span></div>
+        <div class="t-row"><span class="t-label">DOM getBCR():</span><span id="t-dom" style="color:var(--green)">—</span></div>
+        <div class="t-row" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">
           <span class="t-label">Width:</span><span id="t-w" style="color:var(--text-muted)">—</span>
         </div>
-        <div class="t-row">
-          <span class="t-label">Pretext h:</span><span id="t-pred-h" style="color:var(--text-muted)">—</span>
-        </div>
-        <div class="t-row">
-          <span class="t-label">DOM h:</span><span id="t-dom-h" style="color:var(--text-muted)">—</span>
-        </div>
+        <div class="t-row"><span class="t-label">Pretext height:</span><span id="t-pred-h" style="color:var(--text-muted)">—</span></div>
+        <div class="t-row"><span class="t-label">DOM height:</span><span id="t-dom-h" style="color:var(--text-muted)">—</span></div>
+        <div class="t-row"><span class="t-label">Δ:</span><span id="t-delta" style="color:var(--text-muted)">—</span></div>
       </div>
     </div>
 
     <div style="margin-top:24px;">
-      <div class="metric-list" style="max-width:480px;">
+      <div class="metric-list" style="max-width:520px;">
         <div class="metric"><span class="metric-key">Resize events observed</span><span class="metric-val" id="t-count">0</span></div>
-        <div class="metric"><span class="metric-key">Avg Pretext time</span><span class="metric-val" id="t-avg-pretext">—</span></div>
-        <div class="metric"><span class="metric-key">Avg getBCR time</span><span class="metric-val" id="t-avg-dom">—</span></div>
+        <div class="metric"><span class="metric-key">Avg Pretext layout() time</span><span class="metric-val" id="t-avg-pretext">—</span></div>
+        <div class="metric"><span class="metric-key">Avg DOM getBCR() time</span><span class="metric-val" id="t-avg-dom">—</span></div>
       </div>
+    </div>
+
+    <div class="snippet-wrap">
+      <button class="snippet-toggle" id="resize-snippet-toggle"><span class="arrow">▶</span> Show API call</button>
+      <pre class="snippet" id="resize-snippet"><span class="cm">// prepare() once — reuse handle across all resizes</span>
+<span class="kw">const</span> handle = <span class="fn">prepare</span>(text, <span class="str">'15px Inter'</span>);
+
+<span class="cm">// ResizeObserver fires on every size change</span>
+<span class="kw">const</span> ro = <span class="kw">new</span> ResizeObserver(entries => {
+  <span class="kw">const</span> { width } = entries[<span class="num">0</span>].contentRect;
+  <span class="kw">const</span> { height } = <span class="fn">layout</span>(handle, width, lineHeight); <span class="cm">// &lt;0.1ms</span>
+});</pre>
     </div>
   </section>
 
-  <!-- Tab 3: Virtual List -->
+  <!-- ── Tab 3: Virtual List ──────────────────────────────────────────────── -->
   <section class="tab-content" id="tab-vlist">
     <h2>Virtual List (500+ items)</h2>
     <p class="section-desc">
       500 fake text items with varying lengths. Pretext measures each item's height at startup using
-      <span class="code-pill">prepare()</span> + <span class="code-pill">layout()</span> — then only the
+      <span class="code-pill">prepare()</span> + <span class="code-pill">layout()</span> — then only
       visible items are mounted in the DOM as you scroll.
     </p>
 
-    <div id="fps-badge">FPS: <span id="fps-val">—</span></div>
-    <div style="margin-bottom: 12px; display:flex; gap:16px;">
+    <div style="margin-bottom:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+      <div id="fps-badge">FPS: <span id="fps-val">—</span></div>
       <div class="metric" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px 14px;display:flex;gap:10px;align-items:center;">
         <span class="metric-key">Items measured</span><span class="metric-val" id="vl-measured">0</span>
       </div>
@@ -612,7 +635,7 @@
         <span class="metric-key">Measure time</span><span class="metric-val" id="vl-mtime">—</span>
       </div>
       <div class="metric" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px 14px;display:flex;gap:10px;align-items:center;">
-        <span class="metric-key">Visible items</span><span class="metric-val" id="vl-visible">—</span>
+        <span class="metric-key">DOM nodes mounted</span><span class="metric-val" id="vl-visible">—</span>
       </div>
     </div>
 
@@ -620,25 +643,65 @@
       <div id="vlist-spacer"></div>
       <div id="vlist-viewport"></div>
     </div>
+
+    <div class="snippet-wrap">
+      <button class="snippet-toggle" id="vlist-snippet-toggle"><span class="arrow">▶</span> Show API call</button>
+      <pre class="snippet" id="vlist-snippet"><span class="cm">// Measure all 500 items upfront — no DOM needed</span>
+<span class="kw">const</span> heights = items.<span class="fn">map</span>(text => {
+  <span class="kw">const</span> h = <span class="fn">prepare</span>(text, <span class="str">'14px Inter'</span>);
+  <span class="kw">return</span> <span class="fn">layout</span>(h, containerWidth, lineHeight).height;
+});
+
+<span class="cm">// Build cumulative offset table — O(n) once</span>
+<span class="kw">const</span> offsets = heights.<span class="fn">reduce</span>((acc, h) => {
+  acc.<span class="fn">push</span>(acc.at(-<span class="num">1</span>) + h); <span class="kw">return</span> acc;
+}, [<span class="num">0</span>]);
+
+<span class="cm">// On scroll: binary-search first visible index, mount ~10 items</span></pre>
+    </div>
   </section>
 
-  <!-- Tab 4: Multi-language -->
+  <!-- ── Tab 4: Multi-language ────────────────────────────────────────────── -->
   <section class="tab-content" id="tab-multilang">
     <h2>Multi-language Test</h2>
     <p class="section-desc">
-      Pretext handles bidi text, CJK, emoji, and mixed scripts. Each sample is measured at 320px width,
-      16px Inter, line-height 1.6.
+      Pretext handles bidi text, CJK, emoji, and mixed scripts via the Unicode Line Breaking Algorithm.
+      Each sample is measured at 320px width, 16px Inter, line-height 1.6.
     </p>
+
+    <div class="row" style="margin-bottom:20px;">
+      <label style="color:var(--text-muted);font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Locale for segmentation:</label>
+      <select id="lang-locale">
+        <option value="">Default (browser)</option>
+        <option value="en">en — English</option>
+        <option value="zh">zh — Chinese</option>
+        <option value="ja">ja — Japanese</option>
+        <option value="ar">ar — Arabic</option>
+        <option value="ko">ko — Korean</option>
+      </select>
+      <button class="btn danger" id="lang-clear-cache">Clear Cache &amp; Re-measure</button>
+      <span id="lang-cache-status" style="font-family:var(--mono);font-size:11px;color:var(--text-muted);"></span>
+    </div>
+
     <div class="lang-grid" id="lang-grid"></div>
+
+    <div class="snippet-wrap">
+      <button class="snippet-toggle" id="lang-snippet-toggle"><span class="arrow">▶</span> Show API call</button>
+      <pre class="snippet" id="lang-snippet"><span class="fn">setLocale</span>(<span class="str">'ja'</span>); <span class="cm">// configure Intl.Segmenter locale</span>
+
+<span class="kw">const</span> handle = <span class="fn">prepare</span>(japaneseText, <span class="str">'16px Inter'</span>);
+<span class="kw">const</span> { height, lineCount } = <span class="fn">layout</span>(handle, <span class="num">320</span>, <span class="num">25.6</span>);
+
+<span class="fn">clearCache</span>(); <span class="cm">// wipe segment metric + analysis caches</span></pre>
+    </div>
   </section>
 
-  <!-- Tab 5: Line Rendering -->
+  <!-- ── Tab 5: Line Rendering ────────────────────────────────────────────── -->
   <section class="tab-content" id="tab-linewise">
     <h2>Line-by-line Rendering</h2>
     <p class="section-desc">
       Uses <span class="code-pill">prepareWithSegments()</span> + <span class="code-pill">layoutWithLines()</span>
-      to get each line's text and width. Each line is rendered as a separate element with alternating colors,
-      visualizing exact line breaks.
+      to get each line's exact text and pixel width. Each line renders as a colored stripe.
     </p>
 
     <div class="controls">
@@ -658,18 +721,104 @@
       </div>
     </div>
 
-    <div style="margin-bottom:10px;display:flex;gap:16px;align-items:center;">
+    <div style="margin-bottom:10px;display:flex;gap:12px;align-items:center;">
       <div class="metric" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px 14px;display:flex;gap:10px;align-items:center;">
         <span class="metric-key">Lines</span><span class="metric-val" id="lw-linecount">—</span>
       </div>
       <div class="metric" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px 14px;display:flex;gap:10px;align-items:center;">
-        <span class="metric-key">layout time</span><span class="metric-val" id="lw-time">—</span>
+        <span class="metric-key">Total height</span><span class="metric-val" id="lw-height">—</span>
+      </div>
+      <div class="metric" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px 14px;display:flex;gap:10px;align-items:center;">
+        <span class="metric-key">layoutWithLines() time</span><span class="metric-val" id="lw-time">—</span>
       </div>
     </div>
 
     <div id="line-output-wrapper">
       <div id="line-output" class="line-wrap"></div>
     </div>
+
+    <div class="snippet-wrap">
+      <button class="snippet-toggle" id="lw-snippet-toggle"><span class="arrow">▶</span> Show API call</button>
+      <pre class="snippet" id="lw-snippet"><span class="cm">// prepareWithSegments keeps segment boundaries for line reconstruction</span>
+<span class="kw">const</span> prepared = <span class="fn">prepareWithSegments</span>(text, <span class="str">'15px Inter'</span>);
+<span class="kw">const</span> { lines, lineCount, height } = <span class="fn">layoutWithLines</span>(prepared, width, lineHeight);
+
+<span class="cm">// Each line: { text, width, start: LayoutCursor, end: LayoutCursor }</span>
+lines.<span class="fn">forEach</span>((line, i) => {
+  console.<span class="fn">log</span>(`Line ${i+<span class="num">1</span>}: "${line.text}" — ${line.width.<span class="fn">toFixed</span>(<span class="num">0</span>)}px`);
+});</pre>
+    </div>
+  </section>
+
+  <!-- ── Tab 6: Benchmark ─────────────────────────────────────────────────── -->
+  <section class="tab-content" id="tab-benchmark">
+    <h2>Performance Benchmark</h2>
+    <p class="section-desc">
+      Stress-test <span class="code-pill">prepare()</span> and <span class="code-pill">layout()</span>
+      across N iterations. Measures raw throughput. Cache is cleared before each run for a cold-path test,
+      then run again warm.
+    </p>
+
+    <div class="controls">
+      <div class="control-row">
+        <label>Sample text</label>
+        <textarea id="bench-text" rows="3">Typography is the art of arranging type to make written language legible, readable, and appealing when displayed. The arrangement of type involves selecting typefaces, point sizes, line lengths, and letter-spacing.</textarea>
+      </div>
+      <div class="control-row">
+        <label>Iterations</label>
+        <input type="range" id="bench-n" min="10" max="500" value="100" step="10" />
+        <span class="val" id="bench-n-val">100</span>
+      </div>
+      <div class="control-row">
+        <label>Container width</label>
+        <input type="range" id="bench-width" min="100" max="800" value="400" step="10" />
+        <span class="val" id="bench-width-val">400px</span>
+      </div>
+      <div class="control-row" style="gap:10px;">
+        <label></label>
+        <button class="btn accent" id="bench-run">Run Benchmark</button>
+        <span id="bench-status" style="color:var(--text-muted);font-size:13px;"></span>
+      </div>
+    </div>
+
+    <div class="bench-grid" id="bench-cards">
+      <div class="bench-card">
+        <div class="bench-label">prepare() — cold</div>
+        <div class="bench-val" id="bench-prep-cold">—</div>
+        <div class="bench-sub" id="bench-prep-cold-sub"></div>
+      </div>
+      <div class="bench-card highlight">
+        <div class="bench-label">prepare() — warm (cached)</div>
+        <div class="bench-val" id="bench-prep-warm">—</div>
+        <div class="bench-sub" id="bench-prep-warm-sub"></div>
+      </div>
+      <div class="bench-card highlight">
+        <div class="bench-label">layout() — hot path</div>
+        <div class="bench-val" id="bench-layout">—</div>
+        <div class="bench-sub" id="bench-layout-sub"></div>
+      </div>
+    </div>
+
+    <div id="bench-bar-wrap">
+      <h3>Relative time (lower = faster)</h3>
+      <div class="bar-row">
+        <span class="bar-label">prepare() cold</span>
+        <div class="bar-track"><div class="bar-fill" id="bar-cold" style="background:var(--red);width:0%"></div></div>
+        <span class="bar-val" id="bar-cold-val">—</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">prepare() warm</span>
+        <div class="bar-track"><div class="bar-fill" id="bar-warm" style="background:var(--yellow);width:0%"></div></div>
+        <span class="bar-val" id="bar-warm-val">—</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">layout()</span>
+        <div class="bar-track"><div class="bar-fill" id="bar-layout" style="background:var(--green);width:0%"></div></div>
+        <span class="bar-val" id="bar-layout-val">—</span>
+      </div>
+    </div>
+
+    <div id="bench-log">Run the benchmark to see detailed output…</div>
   </section>
 
   <script type="module" src="bundle.js"></script>

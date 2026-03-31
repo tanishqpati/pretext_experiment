@@ -671,6 +671,16 @@ function getSharedWordSegmenter() {
   }
   return sharedWordSegmenter;
 }
+function clearAnalysisCaches() {
+  sharedWordSegmenter = null;
+}
+function setAnalysisLocale(locale) {
+  const nextLocale = locale && locale.length > 0 ? locale : void 0;
+  if (segmenterLocale === nextLocale)
+    return;
+  segmenterLocale = nextLocale;
+  sharedWordSegmenter = null;
+}
 var arabicScriptRe = /\p{Script=Arabic}/u;
 var combiningMarkRe = /\p{M}/u;
 var decimalDigitRe = /\p{Nd}/u;
@@ -1591,6 +1601,11 @@ function getFontMeasurementState(font, needsEmojiCorrection) {
   const emojiCorrection = needsEmojiCorrection ? getEmojiCorrection(font, fontSize) : 0;
   return { cache, fontSize, emojiCorrection };
 }
+function clearMeasurementCaches() {
+  segmentMetricCaches.clear();
+  emojiCorrectionCache.clear();
+  sharedGraphemeSegmenter = null;
+}
 
 // node_modules/@chenglou/pretext/dist/line-break.js
 function canBreakAfter(kind) {
@@ -2222,6 +2237,26 @@ function prepareInternal(text, font, includeSegments, options) {
   const analysis = analyzeText(text, getEngineProfile(), options?.whiteSpace);
   return measureAnalysis(analysis, font, includeSegments);
 }
+function profilePrepare(text, font, options) {
+  const t0 = performance.now();
+  const analysis = analyzeText(text, getEngineProfile(), options?.whiteSpace);
+  const t1 = performance.now();
+  const prepared = measureAnalysis(analysis, font, false);
+  const t2 = performance.now();
+  let breakableSegments = 0;
+  for (const widths of prepared.breakableWidths) {
+    if (widths !== null)
+      breakableSegments++;
+  }
+  return {
+    analysisMs: t1 - t0,
+    measureMs: t2 - t1,
+    totalMs: t2 - t0,
+    analysisSegments: analysis.len,
+    preparedSegments: prepared.widths.length,
+    breakableSegments
+  };
+}
 function prepare(text, font, options) {
   return prepareInternal(text, font, false, options);
 }
@@ -2306,6 +2341,16 @@ function layoutWithLines(prepared, maxWidth, lineHeight) {
   });
   return { lineCount, height: lineCount * lineHeight, lines };
 }
+function clearCache() {
+  clearAnalysisCaches();
+  sharedGraphemeSegmenter2 = null;
+  sharedLineTextCaches = /* @__PURE__ */ new WeakMap();
+  clearMeasurementCaches();
+}
+function setLocale(locale) {
+  setAnalysisLocale(locale);
+  clearCache();
+}
 
 // main.js
 var tabBtns = document.querySelectorAll(".tab-btn");
@@ -2318,12 +2363,27 @@ tabBtns.forEach((btn) => {
     document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
   });
 });
+document.querySelectorAll(".snippet-toggle").forEach((btn) => {
+  const preId = btn.id.replace("-toggle", "");
+  const pre = document.getElementById(preId);
+  if (!pre) return;
+  btn.addEventListener("click", () => {
+    const open = pre.classList.toggle("open");
+    btn.classList.toggle("open", open);
+  });
+});
 function fmtMs(ms) {
-  if (ms < 0.01) return "<0.01ms";
+  if (ms < 1e-3) return "<0.001ms";
+  if (ms < 0.01) return ms.toFixed(4) + "ms";
   return ms.toFixed(3) + "ms";
 }
 function fmtPx(n) {
   return n.toFixed(2) + "px";
+}
+function flashBtn(btn) {
+  btn.classList.remove("flash");
+  void btn.offsetWidth;
+  btn.classList.add("flash");
 }
 var pgText = document.getElementById("pg-text");
 var pgFontSize = document.getElementById("pg-fontsize");
@@ -2332,15 +2392,33 @@ var pgWidth = document.getElementById("pg-width");
 var pgWidthVal = document.getElementById("pg-width-val");
 var pgLh = document.getElementById("pg-lh");
 var pgLhVal = document.getElementById("pg-lh-val");
+var pgPrewrap = document.getElementById("pg-prewrap");
+var pgClearCache = document.getElementById("pg-clear-cache");
+var pgCacheStatus = document.getElementById("pg-cache-status");
 var pgPredHeight = document.getElementById("pg-pred-height");
 var pgPredLines = document.getElementById("pg-pred-lines");
 var pgPredPrep = document.getElementById("pg-pred-prep");
+var pgProfAnalysis = document.getElementById("pg-prof-analysis");
+var pgProfMeasure = document.getElementById("pg-prof-measure");
 var pgPredLayout = document.getElementById("pg-pred-layout");
+var pgProfSegs = document.getElementById("pg-prof-segs");
+var pgProfBreak = document.getElementById("pg-prof-break");
 var pgPredViz = document.getElementById("pg-pred-viz");
 var pgDomHeight = document.getElementById("pg-dom-height");
 var pgDelta = document.getElementById("pg-delta");
 var pgDomTime = document.getElementById("pg-dom-time");
 var pgDomRender = document.getElementById("pg-dom-render");
+var pgSnippet = document.getElementById("pg-snippet");
+var pgMeasureEl = document.createElement("div");
+Object.assign(pgMeasureEl.style, {
+  position: "fixed",
+  left: "-9999px",
+  top: "0",
+  visibility: "hidden",
+  overflowWrap: "break-word",
+  wordBreak: "break-word"
+});
+document.body.appendChild(pgMeasureEl);
 function updatePlayground() {
   const text = pgText.value;
   const fontSize = parseInt(pgFontSize.value, 10);
@@ -2348,45 +2426,76 @@ function updatePlayground() {
   const lineHeightMultiplier = parseInt(pgLh.value, 10) / 10;
   const lineHeight = fontSize * lineHeightMultiplier;
   const font = `${fontSize}px Inter`;
+  const whiteSpace = pgPrewrap.checked ? "pre-wrap" : "normal";
   pgFontSizeVal.textContent = fontSize + "px";
   pgWidthVal.textContent = containerWidth + "px";
   pgLhVal.textContent = lineHeightMultiplier.toFixed(1);
-  const t0 = performance.now();
-  const handle = prepare(text, font);
+  const profile = profilePrepare(text, font, { whiteSpace });
+  const handle = prepare(text, font, { whiteSpace });
   const t1 = performance.now();
   const result = layout(handle, containerWidth, lineHeight);
   const t2 = performance.now();
   pgPredHeight.textContent = fmtPx(result.height);
   pgPredLines.textContent = result.lineCount;
-  pgPredPrep.textContent = fmtMs(t1 - t0);
+  pgPredPrep.textContent = fmtMs(profile.totalMs);
+  pgProfAnalysis.textContent = fmtMs(profile.analysisMs);
+  pgProfMeasure.textContent = fmtMs(profile.measureMs);
   pgPredLayout.textContent = fmtMs(t2 - t1);
-  pgPredViz.style.width = containerWidth + "px";
+  pgProfSegs.textContent = profile.preparedSegments;
+  pgProfBreak.textContent = profile.breakableSegments;
+  pgPredViz.style.width = Math.min(containerWidth, 480) + "px";
   pgPredViz.style.height = result.height + "px";
-  pgPredViz.style.maxWidth = "100%";
-  pgDomRender.style.width = containerWidth + "px";
+  pgMeasureEl.style.width = containerWidth + "px";
+  pgMeasureEl.style.fontSize = fontSize + "px";
+  pgMeasureEl.style.lineHeight = lineHeightMultiplier;
+  pgMeasureEl.style.fontFamily = "Inter, system-ui, sans-serif";
+  pgMeasureEl.style.whiteSpace = pgPrewrap.checked ? "pre-wrap" : "normal";
+  pgMeasureEl.textContent = text;
+  const d0 = performance.now();
+  const bcr = pgMeasureEl.getBoundingClientRect();
+  const d1 = performance.now();
   pgDomRender.style.fontSize = fontSize + "px";
   pgDomRender.style.lineHeight = lineHeightMultiplier;
   pgDomRender.style.fontFamily = "Inter, system-ui, sans-serif";
+  pgDomRender.style.whiteSpace = pgPrewrap.checked ? "pre-wrap" : "normal";
   pgDomRender.textContent = text;
-  const t3 = performance.now();
-  const bcr = pgDomRender.getBoundingClientRect();
-  const t4 = performance.now();
   const domH = bcr.height;
   pgDomHeight.textContent = fmtPx(domH);
-  pgDomTime.textContent = fmtMs(t4 - t3);
+  pgDomTime.textContent = fmtMs(d1 - d0);
   const delta = Math.abs(result.height - domH);
   pgDelta.textContent = fmtPx(delta);
-  pgDelta.className = "metric-val " + (delta < 2 ? "good" : delta < 5 ? "warn" : "");
+  pgDelta.className = "metric-val " + (delta < 2 ? "good" : delta < 5 ? "warn" : "bad");
+  const ws = pgPrewrap.checked ? `, { whiteSpace: 'pre-wrap' }` : "";
+  pgSnippet.innerHTML = `<span class="cm">// profilePrepare() for detailed timing breakdown</span>
+<span class="kw">const</span> profile = <span class="fn">profilePrepare</span>(text, <span class="str">'${font}'</span>${ws});
+<span class="cm">// \u2192 analysisMs: ${fmtMs(profile.analysisMs)}, measureMs: ${fmtMs(profile.measureMs)}</span>
+<span class="cm">// \u2192 preparedSegments: ${profile.preparedSegments}, breakableSegments: ${profile.breakableSegments}</span>
+
+<span class="kw">const</span> handle = <span class="fn">prepare</span>(text, <span class="str">'${font}'</span>${ws});
+<span class="kw">const</span> { height, lineCount } = <span class="fn">layout</span>(handle, <span class="num">${containerWidth}</span>, <span class="num">${lineHeight.toFixed(1)}</span>);
+<span class="cm">// \u2192 height: ${fmtPx(result.height)}, lineCount: ${result.lineCount}</span>`;
 }
 pgText.addEventListener("input", updatePlayground);
 pgFontSize.addEventListener("input", updatePlayground);
 pgWidth.addEventListener("input", updatePlayground);
 pgLh.addEventListener("input", updatePlayground);
+pgPrewrap.addEventListener("change", updatePlayground);
+pgClearCache.addEventListener("click", () => {
+  clearCache();
+  pgCacheStatus.textContent = "Cache cleared \u2713";
+  flashBtn(pgClearCache);
+  setTimeout(() => {
+    pgCacheStatus.textContent = "";
+  }, 2e3);
+  updatePlayground();
+});
 updatePlayground();
-var resizeBox = document.getElementById("resize-box");
-var RESIZE_TEXT = resizeBox.textContent.trim();
+var RESIZE_TEXT = document.getElementById("resize-text").textContent.trim();
 var RESIZE_FONT = "15px Inter";
+var RESIZE_LH = 15 * 1.6;
 var resizePrepared = prepare(RESIZE_TEXT, RESIZE_FONT);
+var resizeMeasureEl = document.getElementById("resize-measure-el");
+resizeMeasureEl.textContent = RESIZE_TEXT;
 var resizeCount = 0;
 var pretextTimes = [];
 var domTimes = [];
@@ -2395,29 +2504,34 @@ var tDom = document.getElementById("t-dom");
 var tW = document.getElementById("t-w");
 var tPredH = document.getElementById("t-pred-h");
 var tDomH = document.getElementById("t-dom-h");
+var tDelta = document.getElementById("t-delta");
 var tCount = document.getElementById("t-count");
 var tAvgPretext = document.getElementById("t-avg-pretext");
 var tAvgDom = document.getElementById("t-avg-dom");
 var ro = new ResizeObserver((entries) => {
   for (const entry of entries) {
     const { width } = entry.contentRect;
+    if (width < 1) continue;
     const p0 = performance.now();
-    const lh = 15 * 1.6;
-    const presult = layout(resizePrepared, width, lh);
+    const presult = layout(resizePrepared, width, RESIZE_LH);
     const p1 = performance.now();
     const pretextMs = p1 - p0;
+    resizeMeasureEl.style.width = width + "px";
     const d0 = performance.now();
-    const bcr = resizeBox.getBoundingClientRect();
+    const bcr = resizeMeasureEl.getBoundingClientRect();
     const d1 = performance.now();
     const domMs = d1 - d0;
     pretextTimes.push(pretextMs);
     domTimes.push(domMs);
     resizeCount++;
+    const domH = bcr.height;
+    const delta = Math.abs(presult.height - domH);
     tPretext.textContent = fmtMs(pretextMs);
     tDom.textContent = fmtMs(domMs);
     tW.textContent = Math.round(width) + "px";
     tPredH.textContent = fmtPx(presult.height);
-    tDomH.textContent = fmtPx(bcr.height);
+    tDomH.textContent = fmtPx(domH);
+    tDelta.textContent = fmtPx(delta);
     tCount.textContent = resizeCount;
     const avgP = pretextTimes.reduce((a, b) => a + b, 0) / pretextTimes.length;
     const avgD = domTimes.reduce((a, b) => a + b, 0) / domTimes.length;
@@ -2425,7 +2539,12 @@ var ro = new ResizeObserver((entries) => {
     tAvgDom.textContent = fmtMs(avgD);
   }
 });
-ro.observe(resizeBox);
+ro.observe(document.getElementById("resize-box"));
+document.getElementById("resize-snippet-toggle").addEventListener("click", () => {
+  const pre = document.getElementById("resize-snippet");
+  const open = pre.classList.toggle("open");
+  document.getElementById("resize-snippet-toggle").classList.toggle("open", open);
+});
 var WORDS = [
   "the",
   "quick",
@@ -2483,10 +2602,7 @@ var WORDS = [
 ];
 function randomSentence(minWords, maxWords) {
   const count = minWords + Math.floor(Math.random() * (maxWords - minWords));
-  const words = [];
-  for (let i = 0; i < count; i++) {
-    words.push(WORDS[Math.floor(Math.random() * WORDS.length)]);
-  }
+  const words = Array.from({ length: count }, () => WORDS[Math.floor(Math.random() * WORDS.length)]);
   const s = words.join(" ");
   return s.charAt(0).toUpperCase() + s.slice(1) + ".";
 }
@@ -2503,31 +2619,27 @@ var fpsVal = document.getElementById("fps-val");
 var vlistItems = [];
 var vlistOffsets = [];
 var vlistHeights = [];
-var vlistTotalHeight = 0;
 var vlistInitialized = false;
 function initVirtualList() {
   if (vlistInitialized) return;
   vlistInitialized = true;
-  const texts = [];
-  for (let i = 0; i < ITEM_COUNT; i++) {
-    texts.push(randomSentence(8, 60));
-  }
+  const texts = Array.from({ length: ITEM_COUNT }, () => randomSentence(8, 60));
   vlistItems = texts;
   const containerWidth = vlistContainer.clientWidth - 40;
-  const fontSize = 14;
-  const lineHeight = fontSize * VLIST_LH_MULT;
+  const lineHeight = 14 * VLIST_LH_MULT;
   const t0 = performance.now();
-  const handles = texts.map((t) => prepare(t, VLIST_FONT));
-  const results = handles.map((h) => layout(h, containerWidth, lineHeight));
+  const results = texts.map((t) => {
+    const h = prepare(t, VLIST_FONT);
+    return layout(h, containerWidth, lineHeight);
+  });
   const t1 = performance.now();
-  vlistHeights = results.map((r) => r.height + 24 + 4 + 16);
+  vlistHeights = results.map((r) => r.height + 44);
   vlistOffsets = new Array(ITEM_COUNT + 1);
   vlistOffsets[0] = 0;
   for (let i = 0; i < ITEM_COUNT; i++) {
     vlistOffsets[i + 1] = vlistOffsets[i] + vlistHeights[i];
   }
-  vlistTotalHeight = vlistOffsets[ITEM_COUNT];
-  vlistSpacer.style.height = vlistTotalHeight + "px";
+  vlistSpacer.style.height = vlistOffsets[ITEM_COUNT] + "px";
   vlMeasured.textContent = ITEM_COUNT;
   vlMtime.textContent = fmtMs(t1 - t0);
   renderVirtualList();
@@ -2543,16 +2655,14 @@ function findFirstVisible(scrollTop) {
 }
 function renderVirtualList() {
   const scrollTop = vlistContainer.scrollTop;
-  const viewportHeight = vlistContainer.clientHeight;
+  const viewH = vlistContainer.clientHeight;
   const start = Math.max(0, findFirstVisible(scrollTop) - 2);
   let end = start;
-  while (end < ITEM_COUNT && vlistOffsets[end] < scrollTop + viewportHeight) end++;
+  while (end < ITEM_COUNT && vlistOffsets[end] < scrollTop + viewH) end++;
   end = Math.min(ITEM_COUNT - 1, end + 2);
   vlistViewport.style.transform = `translateY(${vlistOffsets[start]}px)`;
   const count = end - start + 1;
-  while (vlistViewport.children.length > count) {
-    vlistViewport.removeChild(vlistViewport.lastChild);
-  }
+  while (vlistViewport.children.length > count) vlistViewport.removeChild(vlistViewport.lastChild);
   while (vlistViewport.children.length < count) {
     const el = document.createElement("div");
     el.className = "vlist-item";
@@ -2566,9 +2676,12 @@ function renderVirtualList() {
   vlVisible.textContent = count;
 }
 vlistContainer.addEventListener("scroll", renderVirtualList, { passive: true });
+document.querySelector('[data-tab="vlist"]').addEventListener("click", () => {
+  setTimeout(initVirtualList, 50);
+});
 var fpsFrameCount = 0;
 var fpsLastTime = performance.now();
-function fpsTick() {
+(function fpsTick() {
   fpsFrameCount++;
   const now = performance.now();
   if (now - fpsLastTime >= 1e3) {
@@ -2577,11 +2690,7 @@ function fpsTick() {
     fpsLastTime = now;
   }
   requestAnimationFrame(fpsTick);
-}
-requestAnimationFrame(fpsTick);
-document.querySelector('[data-tab="vlist"]').addEventListener("click", () => {
-  setTimeout(initVirtualList, 50);
-});
+})();
 var LANG_SAMPLES = [
   {
     lang: "English",
@@ -2617,15 +2726,21 @@ var LANG_SAMPLES = [
 var LANG_FONT = "16px Inter";
 var LANG_WIDTH = 320;
 var LANG_LH = 16 * 1.6;
-function initMultiLang() {
+var langLocaleEl = document.getElementById("lang-locale");
+var langClearBtn = document.getElementById("lang-clear-cache");
+var langCacheStatus = document.getElementById("lang-cache-status");
+function buildMultiLang() {
   const grid = document.getElementById("lang-grid");
-  if (grid.children.length > 0) return;
+  grid.innerHTML = "";
+  const locale = langLocaleEl.value || void 0;
+  setLocale(locale);
   LANG_SAMPLES.forEach((sample) => {
     const t0 = performance.now();
     const handle = prepare(sample.text, LANG_FONT);
     const t1 = performance.now();
     const result = layout(handle, LANG_WIDTH, LANG_LH);
     const t2 = performance.now();
+    const safeText = sample.text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const card = document.createElement("div");
     card.className = "lang-card";
     card.innerHTML = `
@@ -2636,11 +2751,11 @@ function initMultiLang() {
       <div class="lang-card-body">
         <div class="lang-cell">
           <div class="lang-cell-label">Sample Text</div>
-          <div class="lang-text-preview">${sample.text}</div>
+          <div class="lang-text-preview">${safeText}</div>
         </div>
-        <div class="lang-cell" style="width:${LANG_WIDTH}px;min-width:${LANG_WIDTH}px;max-width:${LANG_WIDTH}px;">
+        <div class="lang-cell" style="max-width:${LANG_WIDTH + 32}px;">
           <div class="lang-cell-label">DOM Render (${LANG_WIDTH}px)</div>
-          <div id="lang-dom-${sample.tag}" style="font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:1.6;word-break:break-word;overflow-wrap:break-word;border:1px dashed var(--border);border-radius:4px;padding:6px;background:var(--bg);">${sample.text}</div>
+          <div style="font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:1.6;word-break:break-word;overflow-wrap:break-word;width:${LANG_WIDTH}px;border:1px dashed var(--border);border-radius:4px;padding:6px;background:var(--bg);">${safeText}</div>
         </div>
         <div class="lang-cell">
           <div class="lang-cell-label">Pretext Metrics</div>
@@ -2651,11 +2766,31 @@ function initMultiLang() {
             <div><span>layout(): </span><strong>${fmtMs(t2 - t1)}</strong></div>
           </div>
         </div>
-      </div>
-    `;
+      </div>`;
     grid.appendChild(card);
   });
 }
+function initMultiLang() {
+  const grid = document.getElementById("lang-grid");
+  if (grid.children.length > 0) return;
+  buildMultiLang();
+}
+langLocaleEl.addEventListener("change", () => {
+  buildMultiLang();
+  langCacheStatus.textContent = `Locale set to "${langLocaleEl.value || "default"}"`;
+  setTimeout(() => {
+    langCacheStatus.textContent = "";
+  }, 2e3);
+});
+langClearBtn.addEventListener("click", () => {
+  clearCache();
+  buildMultiLang();
+  langCacheStatus.textContent = "Cache cleared \u2014 timings show cold path \u2713";
+  flashBtn(langClearBtn);
+  setTimeout(() => {
+    langCacheStatus.textContent = "";
+  }, 3e3);
+});
 document.querySelector('[data-tab="multilang"]').addEventListener("click", () => {
   setTimeout(initMultiLang, 50);
 });
@@ -2665,6 +2800,7 @@ var lwWidthVal = document.getElementById("lw-width-val");
 var lwFontSize = document.getElementById("lw-fontsize");
 var lwFontSizeVal = document.getElementById("lw-fontsize-val");
 var lwLineCount = document.getElementById("lw-linecount");
+var lwHeight = document.getElementById("lw-height");
 var lwTime = document.getElementById("lw-time");
 var lineOutput = document.getElementById("line-output");
 function updateLineRendering() {
@@ -2677,9 +2813,10 @@ function updateLineRendering() {
   lwFontSizeVal.textContent = fontSize + "px";
   const t0 = performance.now();
   const prepared = prepareWithSegments(text, font);
-  const { lines, lineCount } = layoutWithLines(prepared, containerWidth, lineHeight);
+  const { lines, lineCount, height } = layoutWithLines(prepared, containerWidth, lineHeight);
   const t1 = performance.now();
   lwLineCount.textContent = lineCount;
+  lwHeight.textContent = fmtPx(height);
   lwTime.textContent = fmtMs(t1 - t0);
   lineOutput.innerHTML = "";
   lines.forEach((line, i) => {
@@ -2695,7 +2832,102 @@ function updateLineRendering() {
 lwText.addEventListener("input", updateLineRendering);
 lwWidth.addEventListener("input", updateLineRendering);
 lwFontSize.addEventListener("input", updateLineRendering);
-document.querySelector('[data-tab="linewise"]').addEventListener("click", () => {
-  setTimeout(updateLineRendering, 50);
-});
+document.querySelector('[data-tab="linewise"]').addEventListener("click", () => setTimeout(updateLineRendering, 50));
 updateLineRendering();
+var benchText = document.getElementById("bench-text");
+var benchN = document.getElementById("bench-n");
+var benchNVal = document.getElementById("bench-n-val");
+var benchWidthEl = document.getElementById("bench-width");
+var benchWidthVal = document.getElementById("bench-width-val");
+var benchRunBtn = document.getElementById("bench-run");
+var benchStatus = document.getElementById("bench-status");
+var benchLog = document.getElementById("bench-log");
+benchN.addEventListener("input", () => {
+  benchNVal.textContent = benchN.value;
+});
+benchWidthEl.addEventListener("input", () => {
+  benchWidthVal.textContent = benchWidthEl.value + "px";
+});
+function logLine(msg) {
+  benchLog.innerHTML += msg + "\n";
+  benchLog.scrollTop = benchLog.scrollHeight;
+}
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+benchRunBtn.addEventListener("click", async () => {
+  const text = benchText.value;
+  const n = parseInt(benchN.value, 10);
+  const width = parseInt(benchWidthEl.value, 10);
+  const font = "16px Inter";
+  const lineHeight = 16 * 1.6;
+  benchRunBtn.disabled = true;
+  benchStatus.textContent = "Running\u2026";
+  benchLog.textContent = "";
+  await sleep(20);
+  logLine(`<span style="color:var(--accent)">\u25CF Cold prepare() \xD7 ${n} iterations</span>`);
+  const coldTimes = [];
+  for (let i = 0; i < n; i++) {
+    clearCache();
+    const t0 = performance.now();
+    prepare(text, font);
+    coldTimes.push(performance.now() - t0);
+    if (i % 20 === 19) await sleep(0);
+  }
+  const coldAvg = coldTimes.reduce((a, b) => a + b, 0) / n;
+  const coldMin = Math.min(...coldTimes);
+  const coldMax = Math.max(...coldTimes);
+  logLine(`  avg: ${fmtMs(coldAvg)}  min: ${fmtMs(coldMin)}  max: ${fmtMs(coldMax)}`);
+  logLine(`  throughput: ${(1e3 / coldAvg).toFixed(0)} ops/sec`);
+  await sleep(10);
+  clearCache();
+  prepare(text, font);
+  logLine(`
+<span style="color:var(--yellow)">\u25CF Warm prepare() \xD7 ${n} iterations (cache hot)</span>`);
+  const warmTimes = [];
+  for (let i = 0; i < n; i++) {
+    const t0 = performance.now();
+    prepare(text, font);
+    warmTimes.push(performance.now() - t0);
+    if (i % 20 === 19) await sleep(0);
+  }
+  const warmAvg = warmTimes.reduce((a, b) => a + b, 0) / n;
+  const warmMin = Math.min(...warmTimes);
+  logLine(`  avg: ${fmtMs(warmAvg)}  min: ${fmtMs(warmMin)}`);
+  logLine(`  throughput: ${(1e3 / warmAvg).toFixed(0)} ops/sec`);
+  logLine(`  speedup vs cold: ${(coldAvg / warmAvg).toFixed(1)}\xD7`);
+  await sleep(10);
+  const handle = prepare(text, font);
+  logLine(`
+<span style="color:var(--green)">\u25CF layout() \xD7 ${n} iterations (prepared handle reused)</span>`);
+  const layoutTimes = [];
+  for (let i = 0; i < n; i++) {
+    const t0 = performance.now();
+    layout(handle, width, lineHeight);
+    layoutTimes.push(performance.now() - t0);
+    if (i % 50 === 49) await sleep(0);
+  }
+  const layoutAvg = layoutTimes.reduce((a, b) => a + b, 0) / n;
+  const layoutMin = Math.min(...layoutTimes);
+  logLine(`  avg: ${fmtMs(layoutAvg)}  min: ${fmtMs(layoutMin)}`);
+  logLine(`  throughput: ${(1e3 / layoutAvg).toFixed(0)} ops/sec`);
+  logLine(`  speedup vs cold prepare: ${(coldAvg / layoutAvg).toFixed(0)}\xD7`);
+  await sleep(10);
+  document.getElementById("bench-prep-cold").textContent = fmtMs(coldAvg);
+  document.getElementById("bench-prep-cold-sub").textContent = `${(1e3 / coldAvg).toFixed(0)} ops/sec`;
+  document.getElementById("bench-prep-warm").textContent = fmtMs(warmAvg);
+  document.getElementById("bench-prep-warm-sub").textContent = `${(coldAvg / warmAvg).toFixed(1)}\xD7 faster than cold`;
+  document.getElementById("bench-layout").textContent = fmtMs(layoutAvg);
+  document.getElementById("bench-layout-sub").textContent = `${(coldAvg / layoutAvg).toFixed(0)}\xD7 faster than cold prepare`;
+  const maxTime = coldAvg;
+  document.getElementById("bar-cold").style.width = "100%";
+  document.getElementById("bar-warm").style.width = Math.min(100, warmAvg / maxTime * 100) + "%";
+  document.getElementById("bar-layout").style.width = Math.min(100, layoutAvg / maxTime * 100) + "%";
+  document.getElementById("bar-cold-val").textContent = fmtMs(coldAvg);
+  document.getElementById("bar-warm-val").textContent = fmtMs(warmAvg);
+  document.getElementById("bar-layout-val").textContent = fmtMs(layoutAvg);
+  logLine(`
+<span style="color:var(--text-muted)">Done. ${n} iterations each.</span>`);
+  benchStatus.textContent = "Complete";
+  benchRunBtn.disabled = false;
+});
