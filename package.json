@@ -1,0 +1,17 @@
+{
+  "name": "pretext_experiment",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "node_modules/.bin/esbuild main.js --bundle --outfile=bundle.js --format=esm",
+    "dev": "node_modules/.bin/esbuild main.js --bundle --outfile=bundle.js --format=esm --watch & npx serve . -p 3000"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@chenglou/pretext": "^0.0.3",
+    "esbuild": "^0.27.4"
+  }
+}

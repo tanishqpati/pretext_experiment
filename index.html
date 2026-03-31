@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>@chenglou/pretext Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f1117;
+      --bg2: #181c27;
+      --bg3: #1e2435;
+      --border: #2a3150;
+      --text: #e2e8f0;
+      --text-muted: #7a8499;
+      --accent: #4f8ef7;
+      --accent-hover: #6da4ff;
+      --green: #34d399;
+      --yellow: #fbbf24;
+      --red: #f87171;
+      --font: 'Inter', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 32px;
+    }
+
+    header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+      color: var(--text);
+    }
+
+    header h1 span {
+      color: var(--accent);
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .tab-bar {
+      display: flex;
+      gap: 2px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 12px 16px;
+      transition: color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover { color: var(--text); }
+
+    .tab-btn.active {
+      border-bottom-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .tab-content {
+      display: none;
+      padding: 32px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .tab-content.active { display: block; }
+
+    h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      letter-spacing: -0.2px;
+    }
+
+    .section-desc {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-bottom: 24px;
+      line-height: 1.7;
+    }
+
+    .code-pill {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 1px 6px;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .control-row label {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+      min-width: 120px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .control-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .control-row .val {
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 12px;
+      min-width: 60px;
+      text-align: right;
+    }
+
+    textarea {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.6;
+      padding: 12px 14px;
+      resize: vertical;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    textarea:focus { border-color: var(--accent); }
+
+    /* Comparison panels */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .panel-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .panel-dot.green { background: var(--green); }
+    .panel-dot.yellow { background: var(--yellow); }
+
+    .panel-body { padding: 16px; }
+
+    .metric-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: var(--bg3);
+      border-radius: 6px;
+    }
+
+    .metric-key {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .metric-val {
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .metric-val.good { color: var(--green); }
+    .metric-val.warn { color: var(--yellow); }
+
+    .render-box {
+      border: 1px dashed var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      background: var(--bg);
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+
+    /* Resize tab */
+    .resizable-wrapper {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+
+    #resize-box {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      width: 500px;
+      height: 200px;
+      min-width: 200px;
+      min-height: 80px;
+      max-width: 100%;
+      overflow: hidden;
+      padding: 16px;
+      resize: both;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    #timing-overlay {
+      background: rgba(15, 17, 23, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      bottom: 12px;
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 10px 14px;
+      position: absolute;
+      right: 12px;
+    }
+
+    #timing-overlay .t-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    #timing-overlay .t-row:last-child { margin-bottom: 0; }
+
+    .t-label { color: var(--text-muted); min-width: 80px; }
+
+    /* Virtual list */
+    #vlist-container {
+      position: relative;
+      height: 520px;
+      overflow-y: auto;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    #vlist-spacer {
+      width: 100%;
+    }
+
+    #vlist-viewport {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+    }
+
+    .vlist-item {
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      font-size: 14px;
+      line-height: 1.6;
+      word-break: break-word;
+    }
+
+    .vlist-item .item-idx {
+      color: var(--text-muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    #fps-badge {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--mono);
+      font-size: 12px;
+      margin-bottom: 12px;
+      padding: 6px 12px;
+    }
+
+    #fps-val { color: var(--green); font-weight: 600; }
+
+    /* Language table */
+    .lang-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .lang-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .lang-card-header {
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+    }
+
+    .lang-tag {
+      background: var(--accent);
+      border-radius: 4px;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      padding: 2px 8px;
+      text-transform: uppercase;
+    }
+
+    .lang-card-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0;
+    }
+
+    .lang-cell {
+      padding: 14px 16px;
+      border-right: 1px solid var(--border);
+    }
+
+    .lang-cell:last-child { border-right: none; }
+
+    .lang-cell-label {
+      color: var(--text-muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .lang-text-preview {
+      font-size: 15px;
+      line-height: 1.6;
+      word-break: break-word;
+      direction: auto;
+    }
+
+    .lang-metrics {
+      font-family: var(--mono);
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .lang-metrics span { color: var(--text-muted); }
+    .lang-metrics strong { color: var(--green); }
+
+    /* Line rendering tab */
+    .line-wrap {
+      font-size: 0;
+    }
+
+    .rendered-line {
+      border-radius: 3px;
+      cursor: default;
+      display: block;
+      font-size: 14px;
+      line-height: 1;
+      margin-bottom: 2px;
+      padding: 4px 8px;
+      white-space: pre;
+      word-break: normal;
+      overflow-wrap: normal;
+    }
+
+    .rendered-line:nth-child(odd)  { background: rgba(79, 142, 247, 0.08); }
+    .rendered-line:nth-child(even) { background: rgba(52, 211, 153, 0.06); }
+
+    .line-meta {
+      color: var(--text-muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      margin-right: 10px;
+      user-select: none;
+    }
+
+    #line-output-wrapper {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      max-height: 480px;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>@chenglou/<span>pretext</span> — Interactive Demo</h1>
+    <p>Pure JS text measurement · no DOM reflow · canvas-based · multilingual</p>
+  </header>
+
+  <nav class="tab-bar" id="tab-bar">
+    <button class="tab-btn active" data-tab="playground">Live Playground</button>
+    <button class="tab-btn" data-tab="resize">Resize Timing</button>
+    <button class="tab-btn" data-tab="vlist">Virtual List</button>
+    <button class="tab-btn" data-tab="multilang">Multi-language</button>
+    <button class="tab-btn" data-tab="linewise">Line Rendering</button>
+  </nav>
+
+  <!-- Tab 1: Live Playground -->
+  <section class="tab-content active" id="tab-playground">
+    <h2>Live Measurement Playground</h2>
+    <p class="section-desc">
+      Type any text, adjust font size, container width, and line height. Pretext predicts height and line count
+      using <span class="code-pill">prepare()</span> + <span class="code-pill">layout()</span> — no DOM reads.
+      Compare the prediction against the actual DOM rendering.
+    </p>
+
+    <div class="controls">
+      <div class="control-row">
+        <label>Text</label>
+        <textarea id="pg-text" rows="3">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs. How vexingly quick daft zebras jump!</textarea>
+      </div>
+      <div class="control-row">
+        <label>Font size</label>
+        <input type="range" id="pg-fontsize" min="12" max="72" value="16" step="1" />
+        <span class="val" id="pg-fontsize-val">16px</span>
+      </div>
+      <div class="control-row">
+        <label>Container width</label>
+        <input type="range" id="pg-width" min="100" max="800" value="400" step="10" />
+        <span class="val" id="pg-width-val">400px</span>
+      </div>
+      <div class="control-row">
+        <label>Line height</label>
+        <input type="range" id="pg-lh" min="10" max="30" value="16" step="1" />
+        <span class="val" id="pg-lh-val">1.0</span>
+      </div>
+    </div>
+
+    <div class="compare-grid">
+      <div class="panel">
+        <div class="panel-header"><span class="panel-dot"></span>Pretext Prediction</div>
+        <div class="panel-body">
+          <div class="metric-list">
+            <div class="metric"><span class="metric-key">Height</span><span class="metric-val" id="pg-pred-height">—</span></div>
+            <div class="metric"><span class="metric-key">Line count</span><span class="metric-val" id="pg-pred-lines">—</span></div>
+            <div class="metric"><span class="metric-key">prepare() time</span><span class="metric-val" id="pg-pred-prep">—</span></div>
+            <div class="metric"><span class="metric-key">layout() time</span><span class="metric-val" id="pg-pred-layout">—</span></div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">Measured height shown as overlay:</div>
+          <div style="position:relative;display:inline-block;width:100%">
+            <div id="pg-pred-viz" style="background:rgba(79,142,247,0.05);border:1px solid rgba(79,142,247,0.3);border-radius:6px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><span class="panel-dot green"></span>DOM Rendering (actual)</div>
+        <div class="panel-body">
+          <div class="metric-list">
+            <div class="metric"><span class="metric-key">Height (getBCR)</span><span class="metric-val" id="pg-dom-height">—</span></div>
+            <div class="metric"><span class="metric-key">Δ vs Pretext</span><span class="metric-val" id="pg-delta">—</span></div>
+            <div class="metric"><span class="metric-key">getBCR time</span><span class="metric-val" id="pg-dom-time">—</span></div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">Actual rendered text:</div>
+          <div class="render-box">
+            <div id="pg-dom-render" style="word-break:break-word;overflow-wrap:break-word;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tab 2: Resize Timing -->
+  <section class="tab-content" id="tab-resize">
+    <h2>Resize Comparison</h2>
+    <p class="section-desc">
+      Drag the corner of the box to resize it. On each resize event, two timings are measured:
+      <span class="code-pill">layout()</span> (Pretext — no DOM read) vs
+      <span class="code-pill">getBoundingClientRect()</span> (traditional DOM approach).
+    </p>
+
+    <div class="resizable-wrapper">
+      <div id="resize-box">
+        Typography is the art and technique of arranging type to make written language legible, readable, and appealing when displayed. The arrangement of type involves selecting typefaces, point sizes, line lengths, line-spacing (leading), and letter-spacing (tracking).
+      </div>
+      <div id="timing-overlay">
+        <div class="t-row"><span class="t-label">Pretext:</span><span id="t-pretext" style="color:var(--accent)">—</span></div>
+        <div class="t-row"><span class="t-label">getBCR:</span><span id="t-dom" style="color:var(--green)">—</span></div>
+        <div class="t-row" style="margin-top:4px;padding-top:4px;border-top:1px solid var(--border)">
+          <span class="t-label">Width:</span><span id="t-w" style="color:var(--text-muted)">—</span>
+        </div>
+        <div class="t-row">
+          <span class="t-label">Pretext h:</span><span id="t-pred-h" style="color:var(--text-muted)">—</span>
+        </div>
+        <div class="t-row">
+          <span class="t-label">DOM h:</span><span id="t-dom-h" style="color:var(--text-muted)">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:24px;">
+      <div class="metric-list" style="max-width:480px;">
+        <div class="metric"><span class="metric-key">Resize events observed</span><span class="metric-val" id="t-count">0</span></div>
+        <div class="metric"><span class="metric-key">Avg Pretext time</span><span class="metric-val" id="t-avg-pretext">—</span></div>
+        <div class="metric"><span class="metric-key">Avg getBCR time</span><span class="metric-val" id="t-avg-dom">—</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tab 3: Virtual List -->
+  <section class="tab-content" id="tab-vlist">
+    <h2>Virtual List (500+ items)</h2>
+    <p class="section-desc">
+      500 fake text items with varying lengths. Pretext measures each item's height at startup using
+      <span class="code-pill">prepare()</span> + <span class="code-pill">layout()</span> — then only the
+      visible items are mounted in the DOM as you scroll.
+    </p>
+
+    <div id="fps-badge">FPS: <span id="fps-val">—</span></div>
+    <div style="margin-bottom: 12px; display:flex; gap:16px;">
+      <div class="metric" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px 14px;display:flex;gap:10px;align-items:center;">
+        <span class="metric-key">Items measured</span><span class="metric-val" id="vl-measured">0</span>
+      </div>
+      <div class="metric" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px 14px;display:flex;gap:10px;align-items:center;">
+        <span class="metric-key">Measure time</span><span class="metric-val" id="vl-mtime">—</span>
+      </div>
+      <div class="metric" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px 14px;display:flex;gap:10px;align-items:center;">
+        <span class="metric-key">Visible items</span><span class="metric-val" id="vl-visible">—</span>
+      </div>
+    </div>
+
+    <div id="vlist-container">
+      <div id="vlist-spacer"></div>
+      <div id="vlist-viewport"></div>
+    </div>
+  </section>
+
+  <!-- Tab 4: Multi-language -->
+  <section class="tab-content" id="tab-multilang">
+    <h2>Multi-language Test</h2>
+    <p class="section-desc">
+      Pretext handles bidi text, CJK, emoji, and mixed scripts. Each sample is measured at 320px width,
+      16px Inter, line-height 1.6.
+    </p>
+    <div class="lang-grid" id="lang-grid"></div>
+  </section>
+
+  <!-- Tab 5: Line Rendering -->
+  <section class="tab-content" id="tab-linewise">
+    <h2>Line-by-line Rendering</h2>
+    <p class="section-desc">
+      Uses <span class="code-pill">prepareWithSegments()</span> + <span class="code-pill">layoutWithLines()</span>
+      to get each line's text and width. Each line is rendered as a separate element with alternating colors,
+      visualizing exact line breaks.
+    </p>
+
+    <div class="controls">
+      <div class="control-row">
+        <label>Text</label>
+        <textarea id="lw-text" rows="4">Pretext breaks text into precise lines. This sentence demonstrates how the algorithm works across different widths. Try adjusting the width slider to see lines reflow instantly — without any DOM measurement!</textarea>
+      </div>
+      <div class="control-row">
+        <label>Container width</label>
+        <input type="range" id="lw-width" min="100" max="700" value="400" step="10" />
+        <span class="val" id="lw-width-val">400px</span>
+      </div>
+      <div class="control-row">
+        <label>Font size</label>
+        <input type="range" id="lw-fontsize" min="12" max="36" value="15" step="1" />
+        <span class="val" id="lw-fontsize-val">15px</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:10px;display:flex;gap:16px;align-items:center;">
+      <div class="metric" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px 14px;display:flex;gap:10px;align-items:center;">
+        <span class="metric-key">Lines</span><span class="metric-val" id="lw-linecount">—</span>
+      </div>
+      <div class="metric" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px 14px;display:flex;gap:10px;align-items:center;">
+        <span class="metric-key">layout time</span><span class="metric-val" id="lw-time">—</span>
+      </div>
+    </div>
+
+    <div id="line-output-wrapper">
+      <div id="line-output" class="line-wrap"></div>
+    </div>
+  </section>
+
+  <script type="module" src="bundle.js"></script>
+</body>
+</html>
